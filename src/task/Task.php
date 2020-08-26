@@ -153,20 +153,15 @@ Use \"--help\" for more information about a command.\n";
     protected static function monitor()
     {
         while (1) {
-            // 这两处捕获触发信号,很重要
-            pcntl_signal_dispatch();
-
             // 挂起当前进程的执行直到一个子进程退出或接收到一个信号
             $status = 0;
             $pid = pcntl_wait($status, WNOHANG);//WNOHANG 不阻塞
             pcntl_signal_dispatch();
             if ($pid > 0) {
-                echo "\n",'master 正常获取到退出进程:',$pid ;
                 // worker健康检查
                 self::checkWorkerAlive();
             }
             elseif($pid<0){
-                echo "\n",'master pcntl_wait错误了 为什么呢' ;
                 break;
             }
             else{
@@ -182,7 +177,7 @@ Use \"--help\" for more information about a command.\n";
      */
     protected static function checkWorkerAlive()
     {
-        $allWorkerPid = self::getAllWorkerPid();
+        $allWorkerPid = self::$_workers;
         foreach ($allWorkerPid as $index => $pid) {
             if (!self::isAlive($pid)) {
                 unset(self::$_workers[$index]);
@@ -191,7 +186,6 @@ Use \"--help\" for more information about a command.\n";
 
         self::forkWorkers();
     }
-
     /**
      * 设置进程名.
      *
@@ -232,6 +226,7 @@ Use \"--help\" for more information about a command.\n";
 
     /**
      * 创建一个worker进程.
+     * @throws Exception
      */
     protected static function forkOneWorker()
     {
@@ -240,8 +235,8 @@ Use \"--help\" for more information about a command.\n";
         // 父进程
         if ($pid > 0) {
             self::$_workers[] = $pid;
+            echo "\n成功创建子进程".$pid;
         } else if ($pid === 0) { // 子进程
-            echo "\n成功创建子进程".posix_getpid();
             self::setProcessTitle(self::$cfg['worker_title']);
             // 子进程会阻塞在这里
             self::workerRun();
@@ -253,7 +248,7 @@ Use \"--help\" for more information about a command.\n";
             {
                 self::stopAllWorkers();
             }
-            throw new \Exception("fork one worker fail");
+            throw new Exception("fork one worker fail");
         }
     }
 
@@ -392,7 +387,6 @@ Use \"--help\" for more information about a command.\n";
 
         if (self::$_masterPid === posix_getpid()) {
             self::stopAllWorkers();
-
             if (is_file(self::$cfg['pid_path'])) {
                 @unlink(self::$cfg['pid_path']);
             }
@@ -410,6 +404,7 @@ Use \"--help\" for more information about a command.\n";
     {
         // 停止所有worker即可,master会自动fork新worker
         self::stopAllWorkers();
+        self::checkWorkerAlive();
     }
 
     /**

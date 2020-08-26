@@ -26,7 +26,7 @@ class Demo{
 //        Task::push([
 //            $payload
 //        ]);
-//        sleep(3);
+        sleep(3);
         exit;
         sleep(4);
        echo  file_get_contents('http://vcode.9xy.cn/test.php')."\n";
