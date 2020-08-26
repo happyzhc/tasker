@@ -102,7 +102,7 @@ class Task
                 // 给master发送stop信号
                 posix_kill($masterPid, SIGINT);
 
-                $timeout = 10;
+                $timeout = self::$cfg['stop_worker_timeout']+1;
                 $startTime = time();
                 while (self::isAlive($masterPid)) {
                     usleep(1000);
@@ -361,10 +361,22 @@ Use \"--help\" for more information about a command.\n";
         foreach ($allWorkerPid as $workerPid) {
             posix_kill($workerPid, SIGINT);
         }
-        // 子进程退出异常,强制kill
-        usleep(1000);
-        foreach ($allWorkerPid as $workerPid) {
-            self::forceKill($workerPid);
+        $timeout=self::$cfg['stop_worker_timeout'];
+        $status=0;
+        $start_time=time();
+        while (self::isAlive($allWorkerPid))
+        {
+            usleep(1000);
+            //这里不检查posix_kill获取不到真是值
+            pcntl_wait($status, WNOHANG);
+            if(time()-$start_time>$timeout)
+            {
+                // 子进程退出异常,强制kill
+                foreach ($allWorkerPid as $workerPid) {
+                    self::forceKill($workerPid);
+                }
+                break;
+            }
         }
         // 清空worker实例
         self::$_workers = array();
@@ -384,11 +396,9 @@ Use \"--help\" for more information about a command.\n";
             if (is_file(self::$cfg['pid_path'])) {
                 @unlink(self::$cfg['pid_path']);
             }
-            echo 'master我要结束了';
             exit(0);
         } else { // 子进程退出
             // 退出前可以做一些事
-            echo '我是子我要结束了'.posix_getpid()."\n";
             exit(0);
         }
     }
