@@ -1,10 +1,10 @@
 <?php
 
 
-namespace task;
+namespace tasker;
 
 
-use task\exception\Exception;
+use tasker\exception\Exception;
 
 final class Job
 {

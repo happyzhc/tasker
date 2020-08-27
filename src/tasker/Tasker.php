@@ -1,12 +1,12 @@
 <?php
 
 
-namespace task;
+namespace tasker;
 
 
-use task\exception\Exception;
+use tasker\exception\Exception;
 
-class Task
+class Tasker
 {
     const VERSION='1.0';
 
@@ -264,14 +264,14 @@ Use \"--help\" for more information about a command.\n";
     protected static function installSignal()
     {
         // SIGINT
-        pcntl_signal(SIGINT, array(Task::class, 'signalHandler'), false);
+        pcntl_signal(SIGINT, array(Tasker::class, 'signalHandler'), false);
         // SIGTERM
-        pcntl_signal(SIGTERM, array(Task::class, 'signalHandler'), false);
+        pcntl_signal(SIGTERM, array(Tasker::class, 'signalHandler'), false);
 
         // SIGUSR1
-        pcntl_signal(SIGUSR1, array(Task::class, 'signalHandler'), false);
+        pcntl_signal(SIGUSR1, array(Tasker::class, 'signalHandler'), false);
         // SIGQUIT
-        pcntl_signal(SIGQUIT, array(Task::class, 'signalHandler'), false);
+        pcntl_signal(SIGQUIT, array(Tasker::class, 'signalHandler'), false);
 
         // 忽略信号
         pcntl_signal(SIGUSR2, SIG_IGN, false);

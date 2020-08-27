@@ -1,9 +1,9 @@
 <?php
 
 
-namespace task\queue\driver;
+namespace tasker\queue\driver;
 
-use task\queue\Driver;
+use tasker\queue\Driver;
 
 /**
  * Class Redis
@@ -28,6 +28,9 @@ use task\queue\Driver;
 
 class Redis implements Driver
 {
+    public function fire()
+    {
 
+    }
 
 }

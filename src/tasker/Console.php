@@ -1,7 +1,7 @@
 <?php
 
 
-namespace task;
+namespace tasker;
 
 class Console{
     /**
@@ -9,7 +9,7 @@ class Console{
      **/
     public static function hearder(){
         $text= "------------------------- task ------------------------------".PHP_EOL;
-        $text.= 'taskPHP version:' . Task::VERSION . "      PHP version:".PHP_VERSION.PHP_EOL;
+        $text.= 'taskPHP version:' . Tasker::VERSION . "      PHP version:".PHP_VERSION.PHP_EOL;
         $text.= 'start_time:'.date('Y-m-d H:i:s').PHP_EOL;
         self::display($text,false);
     }

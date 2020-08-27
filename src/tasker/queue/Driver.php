@@ -1,7 +1,7 @@
 <?php
 
 
-namespace task\queue;
+namespace tasker\queue;
 
 
 interface Driver

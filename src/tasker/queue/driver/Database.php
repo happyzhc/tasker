@@ -1,14 +1,14 @@
 <?php
 
 
-namespace task\queue\driver;
+namespace tasker\queue\driver;
 
-use task\exception\TaskException;
-use task\exception\Exception;
-use task\exception\RetryException;
-use task\Job;
-use task\queue\Driver;
-use task\Task;
+use tasker\exception\TaskException;
+use tasker\exception\Exception;
+use tasker\exception\RetryException;
+use tasker\Job;
+use tasker\queue\Driver;
+use tasker\Tasker;
 
 /**
  * Class Database
@@ -113,7 +113,7 @@ class Database implements Driver
                 $this->pdo->rollBack();
                 if ($e instanceof RetryException) {
                     //重试
-                    $sql = 'update ' . $this->cfg['table'] . ' set startat=0 where id=' . $job_row['id'];
+                    $sql = 'update ' . $this->cfg['table'] . ' set startat=0,dotimes=dotimes+1 where id=' . $job_row['id'];
                     if (false === $this->pdo->exec($sql)) {
                         throw new TaskException('sql error:' . $sql);
                     }

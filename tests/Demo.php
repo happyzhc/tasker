@@ -1,6 +1,6 @@
 <?php
 namespace tests;
-use task\Task;
+use tasker\Tasker;
 
 class Demo{
     public function test(...$data){
@@ -11,13 +11,13 @@ class Demo{
             'test',
             $data,
         ];
-        Task::push([
+        Tasker::push([
             $payload,time()
         ]);
-        Task::push([
+        Tasker::push([
             $payload,time()
         ]);
-        Task::push([
+        Tasker::push([
             $payload,time()
         ]);
 //        Task::push([

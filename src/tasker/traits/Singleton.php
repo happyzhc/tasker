@@ -1,7 +1,7 @@
 <?php
 
 
-namespace task\traits;
+namespace tasker\traits;
 
 
 trait Singleton

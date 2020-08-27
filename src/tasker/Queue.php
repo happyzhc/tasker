@@ -1,22 +1,17 @@
 <?php
 
 
-namespace task;
+namespace tasker;
 
 
-use task\exception\Exception;
-use task\queue\Driver;
-use task\traits\Singleton;
+use tasker\exception\Exception;
+use tasker\queue\Driver;
+use tasker\traits\Singleton;
 
 class Queue
 {
     use Singleton;
     public static function listen($cfg){
-        //哎 以后再测试
-//        sleep(mt_rand(3,8));
-//        echo "\n我是子进程".posix_getpid()."我要退出了";
-//        exit();
-
         //worker循环执行这个方法
         $instance=self::getInstance($cfg);
         /**@var $instance Queue*/

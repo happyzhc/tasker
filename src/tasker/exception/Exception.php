@@ -1,7 +1,7 @@
 <?php
 
 
-namespace task\exception;
+namespace tasker\exception;
 
 
 class Exception extends \Exception
