@@ -14,4 +14,7 @@ trait Singleton
         }
         return self::$instance;
     }
+    public static function free(){
+        self::$instance=null;
+    }
 }

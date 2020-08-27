@@ -1,7 +1,7 @@
 <?php
 return [
-    'worker_nums'=>5,
-    'pid_path'=>'/var/run/ctt123_task.pid',
+    'worker_nums'=>4,
+    'pid_path'=>'/var/run/fxf_task.pid',
     'stdout_path'=>'/dev/null',
     'master_title'=>'task_master_process',
     'worker_title'=>'task_worker_process',
@@ -11,7 +11,6 @@ return [
     ],
 
     'retry_count'=>10,//任务失败 重试次数
-    'queue_type'=>'database',
 
     'database'=>[
         'host'=>'127.0.0.1',
