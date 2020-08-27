@@ -230,12 +230,10 @@ Use \"--help\" for more information about a command.\n";
      */
     protected static function forkOneWorker()
     {
-        echo "\nmaster 准备创建新worker进程";
         $pid = pcntl_fork();
         // 父进程
         if ($pid > 0) {
             self::$_workers[] = $pid;
-            echo "\n成功创建子进程".$pid;
         } else if ($pid === 0) { // 子进程
             self::setProcessTitle(self::$cfg['worker_title']);
             // 子进程会阻塞在这里

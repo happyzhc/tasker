@@ -9,10 +9,16 @@ class Demo{
         $payload=[
             addslashes(self::class),
             'test',
-            $data
+            $data,
         ];
         Task::push([
-            $payload
+            $payload,time()
+        ]);
+        Task::push([
+            $payload,time()
+        ]);
+        Task::push([
+            $payload,time()
         ]);
 //        Task::push([
 //            $payload
@@ -20,16 +26,10 @@ class Demo{
 //        Task::push([
 //            $payload
 //        ]);
-//        Task::push([
-//            $payload
-//        ]);
-//        Task::push([
-//            $payload
-//        ]);
-        sleep(3);
-        exit;
-        sleep(4);
-       echo  file_get_contents('http://vcode.9xy.cn/test.php')."\n";
+//        sleep(3);
+//        exit;
+//        sleep(4);
+//       echo  file_get_contents('http://vcode.9xy.cn/test.php')."\n";
 //        echo 'end'.(time()-$stime)."\n";
 //        return false;
     }

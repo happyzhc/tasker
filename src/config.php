@@ -1,6 +1,6 @@
 <?php
 return [
-    'worker_nums'=>1,
+    'worker_nums'=>5,
     'pid_path'=>'/var/run/ctt123_task.pid',
     'stdout_path'=>'/dev/null',
     'master_title'=>'task_master_process',

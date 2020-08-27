@@ -8,6 +8,7 @@ use task\exception\Exception;
 use task\exception\RetryException;
 use task\Job;
 use task\queue\Driver;
+use task\Task;
 
 /**
  * Class Database
@@ -56,27 +57,50 @@ class Database implements Driver
     public function fire(){
         try {
             //加锁取一条数据
-            $this->pdo->beginTransaction();
+            $stime=msectime();
+            $query = 'select count(1) counts from ' . $this->cfg['table'] .
+                ' where doat<' . time() . ' and dotimes<' . $this->cfg['retry_count'] .
+                ' and startat=0' .
+                ' limit 1 ';//sql语句
+            $res = $this->pdo->query($query);//准备执行
+            if (false === $res) {
+                throw new TaskException('sql error:' . $query);
+            }
+            $count_row = $res->fetch(\PDO::FETCH_ASSOC);
+            $count=min($count_row['counts'],20);
+            if (empty($count)) {
+                //gc
+
+                //没有任务时候休息一秒
+                sleep(1);
+                return;
+            }
             $query = 'select id,payload,dotimes from ' . $this->cfg['table'] .
                 ' where doat<' . time() . ' and dotimes<' . $this->cfg['retry_count'] .
                 ' and startat=0' .
-                ' limit 1 for update';//sql语句
+                ' limit '.mt_rand(0,$count-1).',1 ';//sql语句
+
             $res = $this->pdo->query($query);//准备执行
             if (false === $res) {
                 throw new TaskException('sql error:' . $query);
             }
             $job_row = $res->fetch(\PDO::FETCH_ASSOC);
-            if (empty($job_row)) {
-                //没有任务时候休息一秒
-                usleep(100);
-                return;
-            }
-            $sql = 'update ' . $this->cfg['table'] . ' set startat=' . time() . ',dotimes=dotimes+1 where id=' . $job_row['id'];
-            if (false === $this->pdo->exec($sql)) {
+
+
+            $sql = 'update ' . $this->cfg['table'] . ' set startat=' . time() . ',dotimes=dotimes+1 where startat=0 and id=' . $job_row['id'];
+            if (false === $num=$this->pdo->exec($sql)) {
                 throw new TaskException('sql error:' . $sql);
             }
+            if($num!==1)
+            {
+                return;
+            }
             $payload = json_decode($job_row['payload'], true);
-            $this->pdo->commit();
+//            $this->pdo->commit();
+            if(msectime()-$stime>500)
+            {
+                echo $query."\n".(msectime()-$stime)."\n";
+            }
             //执行任务
             try {
                 $this->pdo->beginTransaction();
@@ -120,4 +144,10 @@ class Database implements Driver
         }
         return;
     }
+}
+function msectime()
+{
+    list($msec, $sec) = explode(' ', microtime());
+    $msectime = (float)sprintf('%.0f', (floatval($msec) + floatval($sec)) * 1000);
+    return $msectime;
 }
