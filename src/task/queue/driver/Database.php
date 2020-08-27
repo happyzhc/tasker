@@ -140,7 +140,7 @@ class Database implements Driver
         {
             //其他异常
             var_dump($e->getMessage());
-            var_dump($e);
+//            var_dump($e);
         }
         return;
     }
