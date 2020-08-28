@@ -9,9 +9,9 @@ class Provider
     /**
      *
      * @param $cfg
+     * @throws exception\DatabaseException
      */
     public static function moveToList($cfg){
-        return;
         //从database移到mysql
         /**@var $db \tasker\Database*/
         $db=Database::getInstance($cfg['database']);

@@ -1,6 +1,6 @@
 <?php
 return [
-    'worker_nums'=>4,
+    'worker_nums'=>3,
     'pid_path'=>'/var/run/fxf_task.pid',
     'stdout_path'=>'/dev/null',
     'master_title'=>'task_master_process',

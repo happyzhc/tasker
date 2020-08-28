@@ -10,8 +10,11 @@ use tasker\Redis;
 class Worker extends Process
 {
     protected $cfg;
+    private $_status=[];
     public function __construct($cfg)
     {
+        $this->_status['memory']=memory_get_usage();
+        $this->_status['time']=time();
         $this->cfg=$cfg;
         $this->setProcessTitle($this->cfg['worker_title']);
         $this->_process_id = posix_getpid();
@@ -27,6 +30,10 @@ class Worker extends Process
             if($taster && $taster=json_decode($taster,true))
             {
                 Database::getInstance($this->cfg['database'])->exce('update ' . $this->cfg['database']['table'] . ' set endat=' . time() . ' where id=' . $taster['id']);
+            }
+            else{
+                //休息0.1秒
+                usleep(100000);
             }
         }
     }
@@ -73,7 +80,13 @@ class Worker extends Process
         exit(0);
     }
     protected function status(){
-        //统计状态存放到文件 todo
+        //统计状态存放到文件
+        $memory= memory_get_usage()-$this->_status['memory'];
+        $memory=round($memory/1024/1024, 2).'M';
+        //运行了多少时间
+        $runtime=time()-$this->_status['time'];
+        $data=json_encode(compact('memory','runtime')).PHP_EOL;
+        file_put_contents(dirname($this->cfg['pid_path']).'/status.'.posix_getppid(),$data,FILE_APPEND|LOCK_EX);
     }
 
 }

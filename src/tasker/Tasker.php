@@ -59,7 +59,7 @@ class Tasker
                 Console::display('Task already running at '.$masterPid);
             }
         } else {
-            if ($command && $command !== 'start' && $command !== 'status') {
+            if ($command && $command !== 'start') {
                 Console::display('Task not run');
             }
         }
@@ -86,6 +86,32 @@ class Tasker
                 Console::display('Task reloading ...',false);
                 // 给master发送reload信号
                 posix_kill($masterPid, SIGUSR1);
+                exit(0);
+
+            case 'status':
+                // 给master发送reload信号
+                posix_kill($masterPid, SIGUSR2);
+                $path=dirname($cfg['pid_path']).'/status.'.$masterPid;
+                while (!is_file($path))
+                {
+                    usleep(100);
+                }
+                usleep(100000*$cfg['worker_nums']);
+                $status_content=file_get_contents($path);
+                @unlink($path);
+                $status_array=explode(PHP_EOL,$status_content);
+                $text="worker\truntime\tmemory\t".PHP_EOL;
+                $total_memory=0;
+                foreach ($status_array as $index=>$status) {
+                    if($status)
+                    {
+                        $json=json_decode($status,true);
+                        $text.=($index+1)."\t".$json['runtime']."\t".$json['memory'].PHP_EOL;
+//                        $total_memory+=$json['memory'];
+                    }
+                }
+                Console::hearder();
+                Console::display($text,false);
                 exit(0);
 
             default:

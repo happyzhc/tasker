@@ -4,9 +4,11 @@
 namespace tasker\process;
 
 
+use tasker\Console;
 use tasker\Database;
 use tasker\exception\Exception;
 use tasker\Provider;
+use tasker\Redis;
 use tasker\Tasker;
 use tasker\traits\Singleton;
 
@@ -20,6 +22,9 @@ class Master extends Process
         $this->cfg=$cfg;
         $this->setProcessTitle($this->cfg['master_title']);
         $this->_process_id = posix_getpid();
+    }
+    public function getWorkers(){
+        return array_values($this->_workers);
     }
     protected function saveMasterPid()
     {
@@ -40,8 +45,9 @@ class Master extends Process
         // SIGQUIT
         pcntl_signal(SIGQUIT, array($this, 'signalHandler'), false);
 
+        // SIGUSR2
+        pcntl_signal(SIGUSR2, array($this, 'signalHandler'), false);
         // 忽略信号
-        pcntl_signal(SIGUSR2, SIG_IGN, false);
         pcntl_signal(SIGHUP, SIG_IGN, false);
         pcntl_signal(SIGPIPE, SIG_IGN, false);
     }
@@ -61,6 +67,9 @@ class Master extends Process
             case SIGQUIT:
             case SIGUSR1:
                 $this->reload();
+                break;
+            case SIGUSR2:
+                $this->status();
                 break;
             default:
                 break;
@@ -88,6 +97,19 @@ class Master extends Process
         // 停止所有worker即可,master会自动fork新worker
         $this->stopAllWorkers();
         $this->checkWorkerAlive();
+    }
+
+    /**
+     * 获取状态
+     */
+    protected function status()
+    {
+        $allWorkerPid = $this->_workers;
+        foreach ($allWorkerPid as $workerPid) {
+            posix_kill($workerPid, SIGUSR1);
+        }
+
+
     }
     protected function checkWorkerAlive()
     {
@@ -118,6 +140,9 @@ class Master extends Process
      */
     protected function forkOneWorker()
     {
+        //创建进程之前释放
+        Database::free();
+        Redis::free();
         $pid = pcntl_fork();
         // 父进程
         if ($pid > 0) {
@@ -226,7 +251,6 @@ class Master extends Process
             pcntl_signal_dispatch();
             if ($pid > 0) {
                 // worker健康检查
-                Database::free();
                 $this->checkWorkerAlive();
             }
             elseif($pid<0){
@@ -237,6 +261,8 @@ class Master extends Process
                 try{
                     //读取任务丢到list里
                     Provider::moveToList($this->cfg);
+                    //休息0.1秒
+                    usleep(100000);
                 }catch (\Throwable $e)
                 {
                     echo  $e->getMessage();
@@ -248,8 +274,12 @@ class Master extends Process
     }
     public function run(){
 
-        $this->saveMasterPid();
-        $this->forkWorkers();
+        try {
+            $this->saveMasterPid();
+            $this->forkWorkers();
+        } catch (Exception $e) {
+            Console::log($e->getMessage(),true);
+        }
 
         $this->installSignal();
 
