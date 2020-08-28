@@ -5,6 +5,7 @@ namespace tasker\process;
 
 
 use tasker\Database;
+use tasker\exception\RetryException;
 use tasker\Redis;
 
 class Worker extends Process
@@ -26,13 +27,53 @@ class Worker extends Process
         while (1) {
             // 捕获信号
             pcntl_signal_dispatch();
-            $taster=Redis::getInstance($this->cfg['redis'])->lpop($this->cfg['redis']['queue_key']);
+            $cfg=$this->cfg;
+            $redis=Redis::getInstance($cfg['redis']);
+            $taster=$redis->lpop($cfg['redis']['queue_key']);
             if($taster && $taster=json_decode($taster,true))
             {
-                Database::getInstance($this->cfg['database'])->exce('update ' . $this->cfg['database']['table'] . ' set endat=' . time() . ' where id=' . $taster['id']);
+                $db=Database::getInstance($cfg['database']);
+                $db->beginTransaction();
+                try{
+                    $jobs=$db->query('select id,payload,dotimes from ' . $cfg['database']['table'] .
+                        ' where id='.$taster['id'].' limit 1');
+                    $job=$jobs[0];
+                    if($job['dotimes']>=$cfg['retry_count'] )
+                    {
+                        $db->exce('update ' .
+                            $cfg['database']['table'] . ' set 
+                            doat=0,startat=0 where id ='.$taster['id']);
+                    }
+                    else{
+                        $payload=json_decode($taster['payload'],true);
+                        if(false===call_user_func([(new $payload[0]),$payload[1]],...$payload[2]))
+                        {
+                            throw new RetryException(json_encode($taster));
+                        }
+                        //任务标记未成功
+                        $db->exce('update ' . $cfg['database']['table'] . ' set endat=' . time() . ' where id=' . $taster['id']);
+                    }
+                    $db->commit();
+
+                }catch (\Throwable $e)
+                {
+                    $db->rollBack();
+                    if($e instanceof RetryException)
+                    {
+                        //重新放入队列
+                        $db->exce('update ' .
+                            $cfg['database']['table'] . ' set
+                            dotimes=dotimes+1 where id ='.$taster['id']);
+                        $redis->lpush($cfg['redis']['queue_key'],$e->getMessage());
+                    }
+                    else{
+                        //记录异常
+                        $db->exce('update ' . $cfg['database']['table'] . ' set startat=0,dotimes=99, exception="' . addslashes($e->getMessage()) . '" where id=' . $taster['id']);
+                    }
+                }
             }
             else{
-                //休息0.1秒
+                //休息0.1秒 防止cpu常用
                 usleep(100000);
             }
         }

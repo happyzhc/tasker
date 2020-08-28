@@ -101,7 +101,7 @@ class Tasker
                 @unlink($path);
                 $status_array=explode(PHP_EOL,$status_content);
                 $text="worker\truntime\tmemory\t".PHP_EOL;
-                $total_memory=0;
+//                $total_memory=0;
                 foreach ($status_array as $index=>$status) {
                     if($status)
                     {
@@ -173,11 +173,11 @@ Use \"--help\" for more information about a command.\n";
         }
         try {
             //检查dababase
-//            $res=Database::getInstance($cfg['database'])->query("SHOW COLUMNS FROM ".$cfg['database']['table']);
+            $res=Database::getInstance($cfg['database'])->query("SHOW COLUMNS FROM ".$cfg['database']['table']);
             //字段检查
 
             //检查redis
-//            Redis::getInstance($cfg['redis'])->ping();
+            Redis::getInstance($cfg['redis'])->ping();
         }
         catch (\Throwable $e)
         {
@@ -209,28 +209,35 @@ Use \"--help\" for more information about a command.\n";
 
     /**
      * 添加任务
-     * @param array $job_opt 数组 [payload[class,method,data],doat]
-     * @param array $cfg
-     * @throws Exception
+     * @param array $payload
      */
-    public static function push($job_opt=[],$cfg=[]){
-        if($cfg) {
+    public static function push(...$payload){
+
+        self::delay(...$payload);
+    }
+    public static function delay($class_name,$medoth_name,$param,$doat=null){
+        if(empty(self::$cfg)) {
             //输入配置
             self::cfg($cfg);
         }
-        if(empty($cfg))
-        {
-            throw new Exception('需初始化配置');
-        }
-//        $job_cfg=$cfg[$cfg['queue_type']];
-//        $job_cfg['queue_type']=$cfg['queue_type'];
-//        $job_cfg['retry_count']=$cfg['retry_count'];
-//        Queue::getInstance($job_cfg)->add(...$job_opt);
+        $cfg=self::$cfg;
+        $payload=[
+            $class_name,
+            $medoth_name,
+            $param
+        ];
+        $doat=$doat?:time();
+        $sql='INSERT INTO '.$cfg['database']['table'].
+            '(payload,doat) VALUES("'.addslashes(json_encode($payload)).'",'.$doat.')';
+//        var_dump($sql);
+        Database::getInstance(self::$cfg['database'])->exce($sql);
     }
+    private static $cfg;
     //外部注入配置
     public static function cfg(&$cfg){
         self::parseCfg($cfg);
         self::checkCfg($cfg);
+        self::$cfg=$cfg;
     }
 
 }
