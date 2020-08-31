@@ -92,6 +92,7 @@ class Master extends Process
     {
         // 停止所有worker即可,master会自动fork新worker
         $this->stopAllWorkers();
+        file_put_contents(dirname($this->cfg['pid_path']).'/reload.'.$this->_process_id,'1');
     }
 
     /**

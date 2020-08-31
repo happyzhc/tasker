@@ -105,7 +105,6 @@ class Worker extends Process
      */
     protected function signalHandler($signal)
     {
-        echo "收到信号$signal\n";
         switch ($signal) {
             case SIGINT:
             case SIGTERM:

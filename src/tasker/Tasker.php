@@ -87,13 +87,13 @@ class Tasker
                 Console::display('Task reloading ...',false);
                 // 给master发送reload信号
                 posix_kill($masterPid, SIGUSR1);
-//                pcntl_signal(SIGINT,function ($signal){
-//                    Console::display('Task reload success',false);
-//                },false);
-//                while(1)
-//                {
-//                    pcntl_signal_dispatch();
-//                }
+                $path=dirname($cfg['pid_path']).'/reload.'.$masterPid;
+                while (!is_file($path))
+                {
+                    usleep(100);
+                }
+                @unlink($path);
+                Console::display("Task reload success",false);
                 exit(0);
 
             case 'status':
