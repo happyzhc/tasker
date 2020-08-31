@@ -10,7 +10,7 @@ use tasker\process\Worker;
 
 class Tasker
 {
-    const VERSION='1.0';
+    const VERSION='1.0.0';
     const IS_DEBUG=true;
     protected static $is_cli=false;
 
@@ -49,8 +49,21 @@ class Tasker
      */
     protected static function parseCmd($cfg)
     {
-        global $argv;
-        $command = isset($argv[1]) ? $argv[1] : '';
+        global $argv,$argc;
+
+        $usage = "
+Usage: Commands \n\n
+Commands:\n
+start\t\tStart worker.\n
+stop\t\tStop worker.\n
+reload\t\tReload codes.\n
+status\t\tWorker status.\n\n\n
+Use \"--help\" for more information about a command.\n";
+        if($argc<2)
+        {
+            Console::display($usage);
+        }
+        $command = $argv[$argc-1];
 
         // 获取master的pid和存活状态
         $masterPid = is_file($cfg['pid_path']) ? file_get_contents($cfg['pid_path']) : 0;
@@ -122,14 +135,6 @@ class Tasker
                 exit(0);
 
             default:
-                $usage = "
-Usage: Commands \n\n
-Commands:\n
-start\t\tStart worker.\n
-stop\t\tStop worker.\n
-reload\t\tReload codes.\n
-status\t\tWorker status.\n\n\n
-Use \"--help\" for more information about a command.\n";
                 Console::display($usage);
         }
 
