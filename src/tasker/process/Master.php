@@ -23,9 +23,6 @@ class Master extends Process
         $this->setProcessTitle($this->cfg['master_title']);
         $this->_process_id = posix_getpid();
     }
-    public function getWorkers(){
-        return array_values($this->_workers);
-    }
     protected function saveMasterPid()
     {
         // 保存pid以实现重载和停止
@@ -39,7 +36,6 @@ class Master extends Process
         pcntl_signal(SIGINT, array($this, 'signalHandler'), false);
         // SIGTERM
         pcntl_signal(SIGTERM, array($this, 'signalHandler'), false);
-
         // SIGUSR1
         pcntl_signal(SIGUSR1, array($this, 'signalHandler'), false);
         // SIGQUIT
@@ -96,7 +92,6 @@ class Master extends Process
     {
         // 停止所有worker即可,master会自动fork新worker
         $this->stopAllWorkers();
-        $this->checkWorkerAlive();
     }
 
     /**
@@ -111,21 +106,9 @@ class Master extends Process
 
 
     }
-    protected function checkWorkerAlive()
-    {
-        $allWorkerPid = $this->_workers;
-        foreach ($allWorkerPid as $index => $pid) {
-            if (!$this->isAlive($pid)) {
-                unset($this->_workers[$index]);
-            }
-        }
-
-        $this->forkWorkers();
-    }
 
     /**
      * 创建所有worker进程.
-     * @throws Exception
      */
     protected function forkWorkers()
     {
@@ -136,7 +119,6 @@ class Master extends Process
 
     /**
      * 创建一个worker进程.
-     * @throws Exception
      */
     protected function forkOneWorker()
     {
@@ -146,7 +128,7 @@ class Master extends Process
         $pid = pcntl_fork();
         // 父进程
         if ($pid > 0) {
-            $this->_workers[] = $pid;
+            $this->_workers[$pid] = $pid;
         } else if ($pid === 0) { // 子进程
             // 子进程会阻塞在这里
             (new Worker($this->cfg))->run();
@@ -157,7 +139,7 @@ class Master extends Process
             {
                 $this->stopAllWorkers();
             }
-            throw new Exception("fork one worker fail");
+//            throw new Exception("fork one worker fail");
         }
     }
 
@@ -167,22 +149,18 @@ class Master extends Process
      */
     protected function stopAllWorkers()
     {
-        $allWorkerPid = $this->_workers;
-        foreach ($allWorkerPid as $workerPid) {
+        foreach ($this->_workers as $workerPid) {
             posix_kill($workerPid, SIGINT);
         }
         $timeout=$this->cfg['stop_worker_timeout'];
-        $status=0;
         $start_time=time();
-        while ($this->isAlive($allWorkerPid))
+        while ($this->isAlive($this->_workers))
         {
             usleep(1000);
-            //这里不检查posix_kill获取不到真是值
-            pcntl_wait($status, WNOHANG);
             if(time()-$start_time>$timeout)
             {
                 // 子进程退出异常,强制kill
-                foreach ($allWorkerPid as $workerPid) {
+                foreach ($this->_workers as $workerPid) {
                     $this->forceKill($workerPid);
                 }
                 break;
@@ -213,6 +191,7 @@ class Master extends Process
         }
 
         foreach ($pids as $pid) {
+            pcntl_waitpid($pid,$status,WNOHANG);
             if (posix_kill($pid, 0)) {
                 return true;
             }
@@ -244,42 +223,30 @@ class Master extends Process
      */
     protected function monitor()
     {
+
         while (1) {
             // 挂起当前进程的执行直到一个子进程退出或接收到一个信号
-            $status = 0;
-            $pid = pcntl_wait($status, WNOHANG);//WNOHANG 不阻塞
-            pcntl_signal_dispatch();
-            if ($pid > 0) {
-                // worker健康检查
-                $this->checkWorkerAlive();
+            $status=0;
+            if (($pid = pcntl_wait($status, WNOHANG)) > 0) {
+                unset($this->_workers[$pid]);//把中断的子进程的进程id 剔除掉
             }
-            elseif($pid<0){
-                break;
-            }
-            else{
-                //不阻塞的时候 没有子进程退出要做什么写这里
-                try{
-                    //读取任务丢到list里
-                    Provider::moveToList($this->cfg);
-                    //休息0.1秒
-                    usleep(100000);
-                }catch (\Throwable $e)
-                {
-                    echo  $e->getMessage();
-                }
+            $this->forkWorkers();
+            try{
+                //读取任务丢到list里
+                Provider::moveToList($this->cfg);
                 //扫描监听目录变化 重启worker
+            }catch (\Throwable $e)
+            {
+                echo  $e->getMessage();
             }
-            // 其他你想监控的
+            usleep(1000);
+            pcntl_signal_dispatch();
         }
     }
     public function run(){
 
-        try {
-            $this->saveMasterPid();
-            $this->forkWorkers();
-        } catch (Exception $e) {
-            Console::log($e->getMessage(),true);
-        }
+        $this->saveMasterPid();
+        $this->forkWorkers();
 
         $this->installSignal();
 

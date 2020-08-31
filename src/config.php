@@ -1,11 +1,11 @@
 <?php
 return [
-    'worker_nums'=>2,
+    'worker_nums'=>4,
     'pid_path'=>'/var/run/fxf_task.pid',
     'stdout_path'=>'/dev/null',
     'master_title'=>'task_master_process',
     'worker_title'=>'task_worker_process',
-    'stop_worker_timeout'=>10,//关闭子进程超时时间 超过这个时间 会强制结束
+    'stop_worker_timeout'=>5,//关闭子进程超时时间 超过这个时间 会强制结束
     'hot_update_path'=>[//要监听热更新的目录 会重启worker进程
 
     ],

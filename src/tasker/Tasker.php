@@ -6,6 +6,7 @@ namespace tasker;
 
 use tasker\exception\Exception;
 use tasker\process\Master;
+use tasker\process\Worker;
 
 class Tasker
 {
@@ -72,7 +73,7 @@ class Tasker
                 // 给master发送stop信号
                 posix_kill($masterPid, SIGINT);
 
-                $timeout = $cfg['stop_worker_timeout']+1;
+                $timeout = $cfg['stop_worker_timeout']+3;
                 $startTime = time();
                 while (posix_kill($masterPid,0)) {
                     usleep(1000);
@@ -86,10 +87,16 @@ class Tasker
                 Console::display('Task reloading ...',false);
                 // 给master发送reload信号
                 posix_kill($masterPid, SIGUSR1);
+//                pcntl_signal(SIGINT,function ($signal){
+//                    Console::display('Task reload success',false);
+//                },false);
+//                while(1)
+//                {
+//                    pcntl_signal_dispatch();
+//                }
                 exit(0);
 
             case 'status':
-                // 给master发送reload信号
                 posix_kill($masterPid, SIGUSR2);
                 $path=dirname($cfg['pid_path']).'/status.'.$masterPid;
                 while (!is_file($path))
@@ -240,4 +247,80 @@ Use \"--help\" for more information about a command.\n";
         self::$cfg=$cfg;
     }
 
+}
+
+class test_child{
+    public function __construct()
+    {
+        echo "Child process id = " . posix_getpid() . PHP_EOL;
+        pcntl_signal(SIGINT, [$this,'signal'] , false);
+    }
+    protected function signal($a){
+
+        echo "子进程注册的信号\n";
+        exit;
+    }
+    public function run(){
+        while (true) {//死循环 执行任务
+            sleep(1);
+            pcntl_signal_dispatch();
+        }
+    }
+}
+class test_master{
+    protected function fork() {//定义一个fork子进程函数
+
+        $pid = pcntl_fork();//fork 一个子进程
+
+        switch ($pid) {
+            case -1:
+                die('Create failed');
+                break;
+            case 0:
+                // Child
+
+
+                (new Worker([]))->run();
+
+
+                break;
+            default:
+                // Parent
+
+                $this->childs[$pid] = $pid;//主进程 记录子进程的进程id
+                break;
+        }
+    }
+    protected $childs=[];
+
+    public function run(){
+
+        echo "Master process id = " . posix_getpid() . PHP_EOL;
+// SIGINT
+        pcntl_signal(SIGINT, function ($a){
+            echo "收到信号\n";
+            posix_kill(0,SIGINT);
+            exit;
+        }, false);
+        $count = 1;//fork
+
+        for ($i = 0; $i < $count; $i++) {
+            $this->fork();
+        }
+
+        while ( count($this->childs) ) {//监控
+            if ( ($exit_id = pcntl_wait($status)) > 0 ) {//如果有子进程意外中断了
+                echo "Child({$exit_id}) exited.\n";
+                echo "中断子进程的信号值是 " . pcntl_wtermsig($status) . PHP_EOL;//输出中断的信号量
+                unset($this->childs[$exit_id]);//把中断的子进程的进程id 剔除掉
+            }
+
+            if ( count($this->childs) < $count ) {//如果子进程的进程数量小于规定的数量
+                $this->fork();//重新开辟一个子进程
+            }
+            pcntl_signal_dispatch();
+        }
+
+        echo "Done\n";
+    }
 }

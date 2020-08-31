@@ -92,9 +92,10 @@ class Worker extends Process
 
         // 忽略信号
         pcntl_signal(SIGUSR2, SIG_IGN, false);
-        pcntl_signal(SIGQUIT, SIG_IGN, false);
         pcntl_signal(SIGHUP, SIG_IGN, false);
         pcntl_signal(SIGPIPE, SIG_IGN, false);
+        pcntl_signal(SIGQUIT, SIG_IGN, false);
+        pcntl_signal(SIGCHLD, SIG_IGN, false);
     }
 
     /**
@@ -104,6 +105,7 @@ class Worker extends Process
      */
     protected function signalHandler($signal)
     {
+        echo "收到信号$signal\n";
         switch ($signal) {
             case SIGINT:
             case SIGTERM:
