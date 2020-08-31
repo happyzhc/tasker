@@ -1,2 +1,2 @@
 安装
-composer
+ composer require ljk123/tasker
