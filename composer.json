@@ -1,11 +1,10 @@
 {
-    "name": "ctt123/tasker",
+    "name": "ljk123/tasker",
     "type": "project",
     "license": "MIT",
     "minimum-stability": "dev",
     "require": {
         "php": ">5.6",
-        "ext-pcntl": "*",
         "ext-posix": "*",
       "ext-json": "*"
     },
