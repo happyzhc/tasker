@@ -11,5 +11,14 @@ Tasker::run([
         'db'=>8,
         'pwd'=>'ljk2fxf',
         'queue_key'=>'task'
-    ]
+    ],
+    'database'=>[
+        'host'=>'127.0.0.1',
+        'db'=>'task',
+        'user'=>'task',
+        'pwd'=>'123456',
+        'port'=>3306,
+        'table'=>'task',
+        'charset'=>'utf8'
+    ],
 ]);

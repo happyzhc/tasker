@@ -173,6 +173,7 @@ Use \"--help\" for more information about a command.\n";
      * @param $cfg
      * @return array
      * @throws Exception
+     * @throws \Throwable
      */
     protected static function checkCfg($cfg){
         if($cfg['worker_nums']<=0)
@@ -186,6 +187,18 @@ Use \"--help\" for more information about a command.\n";
         try {
             //检查dababase
             $res=Database::getInstance($cfg['database'])->query("SHOW COLUMNS FROM ".$cfg['database']['table']);
+
+//            var_dump($res);
+            //CREATE TABLE `task` (
+            //  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+            //  `payload` text NOT NULL,
+            //  `doat` int(255) unsigned NOT NULL,
+            //  `dotimes` int(10) unsigned NOT NULL,
+            //  `startat` int(255) unsigned NOT NULL,
+            //  `endat` int(255) unsigned NOT NULL,
+            //  `exception` text NOT NULL,
+            //  PRIMARY KEY (`id`)
+            //) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
             //字段检查
 
             //检查redis
@@ -208,14 +221,16 @@ Use \"--help\" for more information about a command.\n";
      * 启动.
      * @param $cfg
      * @throws Exception
+     * @throws \Throwable
      */
-    public static function run($cfg)
+    public static function run($cfg=[])
     {
         self::checkEnv();
         self::parseCfg($cfg);
         self::parseCmd($cfg);
         self::checkCfg($cfg);
         self::daemonize();
+        self::$cfg=$cfg;
         (new Master($cfg))->run();
     }
 
@@ -230,7 +245,7 @@ Use \"--help\" for more information about a command.\n";
     public static function delay($class_name,$medoth_name,$param,$doat=null){
         if(empty(self::$cfg)) {
             //输入配置
-            self::cfg($cfg);
+            self::cfg();
         }
         $cfg=self::$cfg;
         $payload=[
@@ -246,86 +261,10 @@ Use \"--help\" for more information about a command.\n";
     }
     private static $cfg;
     //外部注入配置
-    public static function cfg(&$cfg){
+    public static function cfg($cfg=[]){
         self::parseCfg($cfg);
         self::checkCfg($cfg);
         self::$cfg=$cfg;
     }
 
-}
-
-class test_child{
-    public function __construct()
-    {
-        echo "Child process id = " . posix_getpid() . PHP_EOL;
-        pcntl_signal(SIGINT, [$this,'signal'] , false);
-    }
-    protected function signal($a){
-
-        echo "子进程注册的信号\n";
-        exit;
-    }
-    public function run(){
-        while (true) {//死循环 执行任务
-            sleep(1);
-            pcntl_signal_dispatch();
-        }
-    }
-}
-class test_master{
-    protected function fork() {//定义一个fork子进程函数
-
-        $pid = pcntl_fork();//fork 一个子进程
-
-        switch ($pid) {
-            case -1:
-                die('Create failed');
-                break;
-            case 0:
-                // Child
-
-
-                (new Worker([]))->run();
-
-
-                break;
-            default:
-                // Parent
-
-                $this->childs[$pid] = $pid;//主进程 记录子进程的进程id
-                break;
-        }
-    }
-    protected $childs=[];
-
-    public function run(){
-
-        echo "Master process id = " . posix_getpid() . PHP_EOL;
-// SIGINT
-        pcntl_signal(SIGINT, function ($a){
-            echo "收到信号\n";
-            posix_kill(0,SIGINT);
-            exit;
-        }, false);
-        $count = 1;//fork
-
-        for ($i = 0; $i < $count; $i++) {
-            $this->fork();
-        }
-
-        while ( count($this->childs) ) {//监控
-            if ( ($exit_id = pcntl_wait($status)) > 0 ) {//如果有子进程意外中断了
-                echo "Child({$exit_id}) exited.\n";
-                echo "中断子进程的信号值是 " . pcntl_wtermsig($status) . PHP_EOL;//输出中断的信号量
-                unset($this->childs[$exit_id]);//把中断的子进程的进程id 剔除掉
-            }
-
-            if ( count($this->childs) < $count ) {//如果子进程的进程数量小于规定的数量
-                $this->fork();//重新开辟一个子进程
-            }
-            pcntl_signal_dispatch();
-        }
-
-        echo "Done\n";
-    }
 }
