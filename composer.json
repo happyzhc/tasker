@@ -4,10 +4,7 @@
     "license": "MIT",
     "minimum-stability": "dev",
     "require": {
-        "php": ">5.6",
-        "ext-posix": "*",
-        "ext-json": "*",
-        "ext-pcntl": "*"
+        "php": ">5.6"
     },
     "autoload": {
         "psr-4": {
