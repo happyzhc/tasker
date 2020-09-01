@@ -1,6 +1,6 @@
 <?php
 return [
-    'worker_nums'=>4,
+    'worker_nums'=>2,
     'pid_path'=>'/var/run/fxf_task.pid',
     'stdout_path'=>'/dev/null',
     'master_title'=>'task_master_process',
@@ -9,6 +9,7 @@ return [
     'hot_update_path'=>[//要监听热更新的目录 会重启worker进程
 
     ],
+    'hot_update_interval'=>5,//热更新目录检查间隔 秒
 
     'retry_count'=>10,//任务失败 重试次数
 

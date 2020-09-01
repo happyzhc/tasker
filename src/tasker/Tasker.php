@@ -50,13 +50,13 @@ class Tasker
     protected static function parseCmd($cfg)
     {
         global $argv,$argc;
-
         $usage = "
 Usage: Commands \n\n
 Commands:\n
 start\t\tStart worker.\n
+restart\t\tStart master.\n
 stop\t\tStop worker.\n
-reload\t\tReload codes.\n
+reload\t\tReload worker.\n
 status\t\tWorker status.\n\n\n
 Use \"--help\" for more information about a command.\n";
         if($argc<2)
@@ -203,6 +203,11 @@ Use \"--help\" for more information about a command.\n";
 
             //检查redis
             Redis::getInstance($cfg['redis'])->ping();
+
+            if(!empty($cfg['hot_update_path']))
+            {
+                //判断是否支持pclose、popen
+            }
         }
         catch (\Throwable $e)
         {
@@ -236,13 +241,23 @@ Use \"--help\" for more information about a command.\n";
 
     /**
      * 添加任务
-     * @param array $payload
+     * @param string $class_name 类名
+     * @param string $medoth_name 方法名
+     * @param array $param 参数
+     * @param mixed $doat 时间戳
      */
-    public static function push(...$payload){
+    public static function push($class_name,$medoth_name,$param=[],$doat=null){
 
-        self::delay(...$payload);
+        self::delay($class_name,$medoth_name,$param,$doat);
     }
-    public static function delay($class_name,$medoth_name,$param,$doat=null){
+
+    /**
+     * @param string $class_name 类名
+     * @param string $medoth_name 方法名
+     * @param array $param 参数
+     * @param mixed $doat 时间戳
+     */
+    public static function delay($class_name,$medoth_name,$param=[],$doat=null){
         if(empty(self::$cfg)) {
             //输入配置
             self::cfg();

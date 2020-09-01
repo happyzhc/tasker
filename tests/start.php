@@ -5,6 +5,9 @@ require_once dirname(__FILE__).'/Demo.php';
 use tasker\Tasker;
 Tasker::run([
     //传入配置
+    'hot_update_path'=>[
+        dirname(__FILE__)
+    ],
     'redis'=>[
         'host'=>'127.0.0.1',
         'port'=>6379,

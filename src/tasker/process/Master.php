@@ -7,6 +7,7 @@ namespace tasker\process;
 use tasker\Console;
 use tasker\Database;
 use tasker\exception\Exception;
+use tasker\HotUpdate;
 use tasker\Provider;
 use tasker\Redis;
 use tasker\Tasker;
@@ -235,13 +236,43 @@ class Master extends Process
             try{
                 //读取任务丢到list里
                 Provider::moveToList($this->cfg);
-                //扫描监听目录变化 重启worker
+                //扫描监听目录变化 重启master
+                if(HotUpdate::check($this->cfg['hot_update_path'],$this->cfg['hot_update_interval'])){
+                    $this->hotUpdate();
+                }
             }catch (\Throwable $e)
             {
                 echo  $e->getMessage();
             }
-            usleep(1000);
+            usleep(100000);
             pcntl_signal_dispatch();
+        }
+    }
+    protected function hotUpdate(){
+        Database::free();
+        Redis::free();
+        $pid = pcntl_fork();
+        // 父进程
+        if ($pid > 0) {
+            //等待
+        } else if ($pid === 0) { // 重启子进程
+            //发送结束信号
+            $this->setProcessTitle('task_hot_update');
+            posix_kill($this->_process_id,SIGINT);
+            $timeout=5;
+            $stime=time();
+            while(posix_kill($this->_process_id,0) && time()-$stime<$timeout);
+            if(posix_kill($this->_process_id,0))
+            {
+                Console::display('stop fail');
+                exit(0);
+            }
+            global $argv;
+            $cmd='php '.$_SERVER['PWD'].'/'.join(' ',$argv);
+            pclose(popen($cmd,'r'));
+            exit(0);
+        } else {
+            //创建子进程失败
         }
     }
     public function run(){

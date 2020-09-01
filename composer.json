@@ -6,7 +6,8 @@
     "require": {
         "php": ">5.6",
         "ext-posix": "*",
-      "ext-json": "*"
+        "ext-json": "*",
+        "ext-pcntl": "*"
     },
     "autoload": {
         "psr-4": {
