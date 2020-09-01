@@ -5,6 +5,7 @@ return [
     'stdout_path'=>'/dev/null',
     'master_title'=>'task_master_process',
     'worker_title'=>'task_worker_process',
+    'tasker_user'=>'www',
     'stop_worker_timeout'=>5,//关闭子进程超时时间 超过这个时间 会强制结束
     'hot_update_path'=>[//要监听热更新的目录 会重启worker进程
 

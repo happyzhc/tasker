@@ -14,4 +14,14 @@ abstract class Process
             @cli_set_process_title($title);
         }
     }
+
+    protected function setUser($user)
+    {
+        $user = posix_getpwnam($user);
+
+        if (!empty($user)) {
+            posix_setgid($user['gid']);
+            posix_setuid($user['uid']);
+        }
+    }
 }

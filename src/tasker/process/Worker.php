@@ -20,6 +20,10 @@ class Worker extends Process
         $this->setProcessTitle($this->cfg['worker_title']);
         $this->_process_id = posix_getpid();
         $this->installSignal();
+        if($this->cfg['tasker_user'])
+        {
+            $this->setUser($this->cfg['tasker_user']);
+        }
     }
 
     public function run(){
