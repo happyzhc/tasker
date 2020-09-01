@@ -240,7 +240,7 @@ class Master extends Process
                 if(HotUpdate::check($this->cfg['hot_update_path'],$this->cfg['hot_update_interval'])){
                     $this->hotUpdate();
                 }
-            }catch (\Throwable $e)
+            }catch (\Exception $e)
             {
                 echo  $e->getMessage();
             }

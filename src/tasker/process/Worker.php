@@ -59,7 +59,7 @@ class Worker extends Process
                     }
                     $db->commit();
 
-                }catch (\Throwable $e)
+                }catch (\Exception $e)
                 {
                     $db->rollBack();
                     if($e instanceof RetryException)

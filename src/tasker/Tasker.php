@@ -173,7 +173,7 @@ Use \"--help\" for more information about a command.\n";
      * @param $cfg
      * @return array
      * @throws Exception
-     * @throws \Throwable
+     * @throws \Exception
      */
     protected static function checkCfg($cfg){
         if($cfg['worker_nums']<=0)
@@ -209,7 +209,7 @@ Use \"--help\" for more information about a command.\n";
                 //判断是否支持pclose、popen
             }
         }
-        catch (\Throwable $e)
+        catch (\Exception $e)
         {
             if($e instanceof Exception)
             {
@@ -226,7 +226,7 @@ Use \"--help\" for more information about a command.\n";
      * 启动.
      * @param $cfg
      * @throws Exception
-     * @throws \Throwable
+     * @throws \Exception
      */
     public static function run($cfg=[])
     {
