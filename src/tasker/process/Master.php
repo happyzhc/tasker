@@ -28,7 +28,7 @@ class Master extends Process
     {
         // 保存pid以实现重载和停止
         if (false === file_put_contents($this->cfg['pid_path'], $this->_process_id)) {
-            throw new Exception('can not save pid to'.$this->cfg['pid_path']);
+            Console::display('can not save pid to'.$this->cfg['pid_path']);
         }
     }
     //安装信号
@@ -212,13 +212,24 @@ class Master extends Process
         {
             return;
         }
-        global $STDERR, $STDOUT;
 
-        //重定向标准输出和错误输出
-        @fclose(STDOUT);
-        fclose(STDERR);
-        $STDOUT = fopen($this->cfg['stdout_path'], 'a');
-        $STDERR = fopen($this->cfg['stdout_path'], 'a');
+        global $argv,$STDOUT, $STDERR;
+        $stdout_path=is_null($this->cfg['stdout_path'])?
+            dirname($_SERVER['PWD'].'/'.$argv[0]).'/tasker.log':
+            $this->cfg['stdout_path'];
+        $handle = fopen($stdout_path, "a");
+        if ($handle) {
+            unset($handle);
+            set_error_handler(function(){});
+            fclose($STDOUT);
+            fclose($STDERR);
+            fclose(STDOUT);
+            fclose(STDERR);
+            $STDOUT = fopen($stdout_path, "a");
+            $STDERR = fopen($stdout_path, "a");
+            restore_error_handler();
+        }
+
     }
     /**
      * master进程监控worker.
@@ -278,11 +289,11 @@ class Master extends Process
     public function run(){
 
         $this->saveMasterPid();
+        $this->resetStdFd();
         $this->forkWorkers();
 
         $this->installSignal();
 
-        $this->resetStdFd();
         $this->monitor();
     }
 }

@@ -6,12 +6,11 @@ namespace tasker;
 
 use tasker\exception\Exception;
 use tasker\process\Master;
-use tasker\process\Worker;
 
 class Tasker
 {
     const VERSION='1.0.0';
-    const IS_DEBUG=true;
+    const IS_DEBUG=false;
     protected static $is_cli=false;
 
     /**
