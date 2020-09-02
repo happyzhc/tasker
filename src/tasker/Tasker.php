@@ -111,7 +111,7 @@ Use \"--help\" for more information about a command.\n";
 
             case 'status':
                 posix_kill($masterPid, SIGUSR2);
-                $path=dirname($cfg['pid_path']).'/status.'.$masterPid;
+                $path='/tmp/status.'.$masterPid;
                 while (!is_file($path))
                 {
                     usleep(100);
@@ -120,13 +120,13 @@ Use \"--help\" for more information about a command.\n";
                 $status_content=file_get_contents($path);
                 @unlink($path);
                 $status_array=explode(PHP_EOL,$status_content);
-                $text="worker\truntime\tmemory\t".PHP_EOL;
+                $text="worker\tpid\truntime\tmemory\t".PHP_EOL;
 //                $total_memory=0;
                 foreach ($status_array as $index=>$status) {
                     if($status)
                     {
                         $json=json_decode($status,true);
-                        $text.=($index+1)."\t".$json['runtime']."\t".$json['memory'].PHP_EOL;
+                        $text.=($index+1)."\t".$json['process_id']."\t".$json['runtime']."\t".$json['memory'].PHP_EOL;
 //                        $total_memory+=$json['memory'];
                     }
                 }

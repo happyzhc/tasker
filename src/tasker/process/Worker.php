@@ -127,12 +127,13 @@ class Worker extends Process
     }
     protected function status(){
         //统计状态存放到文件
+        $process_id=$this->_process_id;
         $memory= memory_get_usage()-$this->_status['memory'];
         $memory=round($memory/1024/1024, 2).'M';
         //运行了多少时间
         $runtime=time()-$this->_status['time'];
-        $data=json_encode(compact('memory','runtime')).PHP_EOL;
-        file_put_contents(dirname($this->cfg['pid_path']).'/status.'.posix_getppid(),$data,FILE_APPEND|LOCK_EX);
+        $data=json_encode(compact('process_id','memory','runtime')).PHP_EOL;
+        file_put_contents('/tmp/status.'.posix_getppid(),$data,FILE_APPEND|LOCK_EX);
     }
 
 }
