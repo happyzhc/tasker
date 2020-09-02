@@ -1,7 +1,7 @@
 <?php
 
 
-namespace tasker;
+namespace tasker\queue;
 
 
 use tasker\exception\DatabaseException;

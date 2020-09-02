@@ -6,6 +6,8 @@ namespace tasker;
 
 use tasker\exception\Exception;
 use tasker\process\Master;
+use tasker\queue\Database;
+use tasker\queue\Redis;
 
 class Tasker
 {

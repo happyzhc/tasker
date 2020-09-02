@@ -1,19 +1,22 @@
 <?php
 
 
-namespace tasker;
+namespace tasker\process\master;
 
+
+use tasker\queue\Database;
+use tasker\queue\Redis;
 
 class Provider
 {
     /**
      *
      * @param $cfg
-     * @throws exception\DatabaseException
+     * @throws \tasker\exception\DatabaseException
      */
     public static function moveToList($cfg){
         //从database移到mysql
-        /**@var $db \tasker\Database*/
+        /**@var $db Database*/
         $db=Database::getInstance($cfg['database']);
         $redis=Redis::getInstance($cfg['redis']);
         $result=$db->query('select id,payload,dotimes from ' . $cfg['database']['table'] .

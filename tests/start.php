@@ -1,7 +1,6 @@
 <?php
 namespace tests;
 require_once dirname(__FILE__).'/../vendor/autoload.php';
-require_once dirname(__FILE__).'/Demo.php';
 use tasker\Tasker;
 Tasker::run([
     //传入配置
@@ -25,3 +24,11 @@ Tasker::run([
         'charset'=>'utf8'
     ],
 ]);
+
+class Demo{
+    public function test(...$data){
+//        Tasker::push(__CLASS__,'test',$data);
+        //asdasd
+
+    }
+}

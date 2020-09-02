@@ -1,7 +1,7 @@
 <?php
 
 
-namespace tasker;
+namespace tasker\process\master;
 
 
 use RecursiveDirectoryIterator;

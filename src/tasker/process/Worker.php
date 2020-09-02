@@ -4,9 +4,10 @@
 namespace tasker\process;
 
 
-use tasker\Database;
+use tasker\Op;
+use tasker\queue\Database;
 use tasker\exception\RetryException;
-use tasker\Redis;
+use tasker\queue\Redis;
 
 class Worker extends Process
 {
@@ -78,7 +79,7 @@ class Worker extends Process
             }
             else{
                 //休息0.1秒 防止cpu常用
-                usleep(100000);
+                Op::sleep(0.1);
             }
         }
     }

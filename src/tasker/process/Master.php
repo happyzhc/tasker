@@ -5,11 +5,11 @@ namespace tasker\process;
 
 
 use tasker\Console;
-use tasker\Database;
-use tasker\exception\Exception;
-use tasker\HotUpdate;
-use tasker\Provider;
-use tasker\Redis;
+use tasker\Op;
+use tasker\process\master\HotUpdate;
+use tasker\queue\Database;
+use tasker\process\master\Provider;
+use tasker\queue\Redis;
 use tasker\Tasker;
 use tasker\traits\Singleton;
 
@@ -255,7 +255,7 @@ class Master extends Process
             {
                 echo  $e->getMessage();
             }
-            usleep(100000);
+            Op::sleep(0.1);
             pcntl_signal_dispatch();
         }
     }

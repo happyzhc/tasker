@@ -1,7 +1,7 @@
 <?php
 
 
-namespace tasker;
+namespace tasker\queue;
 
 use tasker\exception\RedisException;
 use tasker\traits\Singleton;
