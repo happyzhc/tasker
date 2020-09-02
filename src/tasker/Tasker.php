@@ -175,41 +175,56 @@ Use \"--help\" for more information about a command.\n";
      * @throws \Exception
      */
     protected static function checkCfg($cfg){
-        if($cfg['worker_nums']<=0)
-        {
-            if(!self::$is_cli)
+        try {
+            //pcntl 系列函数判断
+            if(!self::functionCheck([
+                'posix_kill',
+                'posix_getpid',
+                'posix_getppid',
+                'posix_setsid',
+            ]))
+            {
+                throw new Exception('posix_* functions has been disabled');
+            }
+            if(!self::functionCheck([
+                'pcntl_signal_dispatch',
+                'pcntl_signal',
+                'pcntl_fork',
+                'pcntl_waitpid',
+            ]))
+            {
+                throw new Exception('pcntl_* functions has been disabled');
+            }
+
+            if($cfg['worker_nums']<=0)
             {
                 throw new Exception('worker_nums value invalid');
             }
-            Console::display('worker_nums value invalid');
-        }
-        try {
             //检查dababase
             $res=Database::getInstance($cfg['database'])->query("SHOW COLUMNS FROM ".$cfg['database']['table']);
 
-//            var_dump($res);
-            //CREATE TABLE `task` (
-            //  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-            //  `payload` text NOT NULL,
-            //  `doat` int(255) unsigned NOT NULL,
-            //  `dotimes` int(10) unsigned NOT NULL,
-            //  `startat` int(255) unsigned NOT NULL,
-            //  `endat` int(255) unsigned NOT NULL,
-            //  `exception` text NOT NULL,
-            //  PRIMARY KEY (`id`)
-            //) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
-            //字段检查
+            if(!(array_column($res,'Field')===['id','payload','doat','dotimes','startat','endat','exception']))
+            {
+                throw new Exception('table '.$cfg['database']['table'].' field error');
+            }
 
             //检查redis
             Redis::getInstance($cfg['redis'])->ping();
-
             if(!empty($cfg['hot_update_path']))
             {
                 //判断是否支持pclose、popen
+                if(!self::functionCheck('pclose,popen'))
+                {
+                    throw new Exception('pclose | popen has been disabled');
+                }
             }
         }
         catch (\Exception $e)
         {
+            if(self::$is_cli)
+            {
+                Console::display($e->getMessage());
+            }
             if($e instanceof Exception)
             {
                 throw $e;
@@ -218,6 +233,20 @@ Use \"--help\" for more information about a command.\n";
         }
         return $cfg;
 
+    }
+    protected static function functionCheck($functions){
+        if(!is_array($functions))
+        {
+            $functions=explode(',',$functions);
+        }
+        foreach ($functions as $function)
+        {
+            if(!function_exists($function))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
 
