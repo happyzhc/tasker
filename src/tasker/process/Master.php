@@ -215,7 +215,7 @@ class Master extends Process
 
         global $argv,$STDOUT, $STDERR;
         $stdout_path=is_null($this->cfg['stdout_path'])?
-            dirname($_SERVER['PWD'].'/'.$argv[0]).'/tasker.log':
+            dirname(is_file($argv[0])?$argv[0]:$_SERVER['PWD'].'/'.$argv[0]).'/tasker.log':
             $this->cfg['stdout_path'];
         $handle = fopen($stdout_path, "a");
         if ($handle) {
