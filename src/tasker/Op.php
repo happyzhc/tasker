@@ -17,4 +17,12 @@ class Op
     public static function sleep($sec){
         usleep(intval(floatval($sec)*1000000));
     }
+
+    public static function dtime($time){
+        $d=floor($time/86400);//天
+        $h=floor(($time-$d*86400)/3600);//小时
+        $m=floor(($time-$d*86400-$h*3600)/60);//分
+        $s=$time%60;
+        return sprintf("%dDay %dHour %dMin %dSec",$d,$h,$m,$s);
+    }
 }

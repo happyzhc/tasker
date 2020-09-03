@@ -141,6 +141,7 @@ class Worker extends Process
         $memory=round($memory/1024/1024, 2).'M';
         //运行了多少时间
         $runtime=time()-$this->_status['time'];
+        $runtime=Op::dtime($runtime);
         $data=json_encode(compact('process_id','memory','runtime')).PHP_EOL;
         file_put_contents('/tmp/status.'.posix_getppid(),$data,FILE_APPEND|LOCK_EX);
     }

@@ -279,7 +279,13 @@ class Master extends Process
                 exit(0);
             }
             global $argv;
-            $cmd='php '.$_SERVER['PWD'].'/'.join(' ',$argv);
+            if(!is_file($argv[0]))
+            {
+                $cmd='php '.$_SERVER['PWD'].'/'.join(' ',$argv);
+            }
+            else{
+                $cmd='php '.join(' ',$argv);
+            }
             pclose(popen($cmd,'r'));
             exit(0);
         } else {

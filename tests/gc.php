@@ -28,8 +28,8 @@ class ClassA {
     public function test($cfg){
         $obj=new ClassB;
         echo $obj->getVal()."\n";
-        Tasker::cfg($cfg);
-        Tasker::push(__CLASS__,'test',[$cfg]);
+//        Tasker::cfg($cfg);
+//        Tasker::push(__CLASS__,'test',[$cfg]);
 
     }
 }
