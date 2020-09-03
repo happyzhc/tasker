@@ -255,8 +255,6 @@ Use \"--help\" for more information about a command.\n";
     /**
      * 启动.
      * @param $cfg
-     * @throws Exception
-     * @throws \Exception
      */
     public static function run($cfg=[])
     {
@@ -273,7 +271,7 @@ Use \"--help\" for more information about a command.\n";
      * 添加任务
      * @param string $class_name 类名
      * @param string $medoth_name 方法名
-     * @param array $param 参数
+     * @param array $param 参数 ...模式传入
      * @param mixed $doat 时间戳
      */
     public static function push($class_name,$medoth_name,$param=[],$doat=null){
