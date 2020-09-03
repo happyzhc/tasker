@@ -34,10 +34,10 @@ class Worker extends Process
             pcntl_signal_dispatch();
             $cfg=$this->cfg;
             $redis=Redis::getInstance($cfg['redis']);
+            $db=Database::getInstance($cfg['database']);
             $taster=$redis->lpop($cfg['redis']['queue_key']);
             if($taster && $taster=json_decode($taster,true))
             {
-                $db=Database::getInstance($cfg['database']);
                 $db->beginTransaction();
                 try{
                     $jobs=$db->query('select id,payload,dotimes from ' . $cfg['database']['table'] .
@@ -59,8 +59,8 @@ class Worker extends Process
                         $db->exce('update ' . $cfg['database']['table'] . ' set endat=' . time() . ' where id=' . $taster['id']);
                     }
                     $db->commit();
-
-                }catch (\Exception $e)
+                }
+                catch (\Exception $e)
                 {
                     $db->rollBack();
                     if($e instanceof RetryException)
@@ -80,6 +80,14 @@ class Worker extends Process
             else{
                 //休息0.1秒 防止cpu常用
                 Op::sleep(0.1);
+                if(false===$db->ping())
+                {
+                    Database::free();
+                }
+                if(false===$redis->ping())
+                {
+                    Redis::free();
+                }
             }
         }
     }

@@ -40,6 +40,16 @@ class Database
         }
         return $num;
     }
+    public function ping(){
+        try{
+            $this->pdo->getAttribute(\PDO::ATTR_SERVER_INFO);
+        } catch (PDOException $e) {
+            if(strpos($e->getMessage(), 'MySQL server has gone away')!==false){
+                return false;
+            }
+        }
+        return true;
+    }
     public function __call($method, $arguments)
     {
         return call_user_func([$this->pdo,$method],...$arguments);

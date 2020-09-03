@@ -46,7 +46,15 @@ class Provider
             $db->commit();
         }
         else{
-            //gc
+            //心跳检查
+            if(false===$db->ping())
+            {
+                Database::free();
+            }
+            if(false===$redis->ping())
+            {
+                Redis::free();
+            }
         }
     }
 
