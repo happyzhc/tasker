@@ -4,6 +4,7 @@
 namespace tasker\process;
 
 
+use tasker\Console;
 use tasker\Op;
 use tasker\queue\Database;
 use tasker\exception\RetryException;
@@ -76,6 +77,7 @@ class Worker extends Process
                         $db->exce('update ' . $cfg['database']['table'] . ' set startat=0,dotimes=99, exception="' . addslashes($e->getMessage()) . '" where id=' . $taster['id']);
                     }
                 }
+                Console::log('complete a job of '.$taster['id']);
             }
             else{
                 //休息0.1秒 防止cpu常用

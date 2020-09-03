@@ -24,7 +24,6 @@ class Console{
     }
     public static function log($msg,$isClose=false){
         $text=date('[Y-m-d H:i:s]').$msg;
-        return
         self::display($text,$isClose);
     }
 }
