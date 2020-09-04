@@ -16,6 +16,6 @@ class Gc
             self::$_instance=mt_rand(0,10);
         }
         Console::log(self::$_instance);
-        Tasker::push(__CLASS__,__METHOD__);
+        Tasker::push(__CLASS__,'gc_test');
     }
 }
