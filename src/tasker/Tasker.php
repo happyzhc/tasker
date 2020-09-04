@@ -52,18 +52,18 @@ class Tasker
     {
         global $argv,$argc;
         $usage = "
-Usage: Commands \n\n
+Usage: Commands 
 Commands:\n
-start\t\tStart worker.\n
-restart\t\tStart master.\n
-stop\t\tStop worker.\n
-reload\t\tReload worker.\n
-status\t\tWorker status.\n
+start\t\tStart worker.
+restart\t\tStart master.
+stop\t\tStop worker.
+reload\t\tReload worker.
+status\t\tWorker status.
 \t\t-s speed info
 \t\t-t time info
 \t\t-c count info
 \t\t-m count info
-\n\n
+
 Use \"--help\" for more information about a command.\n";
         $i=1;
         $options=[];
@@ -80,6 +80,7 @@ Use \"--help\" for more information about a command.\n";
 
         if($argc<2 || in_array('--help',$argv) || empty($command))
         {
+            Console::header();
             Console::display($usage);
         }
 

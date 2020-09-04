@@ -230,7 +230,7 @@ class Master extends Process
 
         global $argv,$STDOUT, $STDERR;
         $stdout_path=is_null($this->cfg['stdout_path'])?
-            dirname(is_file($argv[0])?$argv[0]:$_SERVER['PWD'].'/'.$argv[0]).'/tasker.log':
+            dirname(realpath($argv[0])).'/tasker.log':
             $this->cfg['stdout_path'];
         $handle = fopen($stdout_path, "a");
         if ($handle) {
@@ -296,13 +296,9 @@ class Master extends Process
                 exit(0);
             }
             global $argv;
-            if(!is_file($argv[0]))
-            {
-                $cmd='php '.$_SERVER['PWD'].'/'.join(' ',$argv);
-            }
-            else{
-                $cmd='php '.join(' ',$argv);
-            }
+            $cp_argv=$argv;
+            $cp_argv[0]=realpath($cp_argv[0]);
+            $cmd='php '.join(' ',$cp_argv);
             pclose(popen($cmd,'r'));
             exit(0);
         } else {

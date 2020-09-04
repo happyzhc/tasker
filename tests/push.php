@@ -2,9 +2,8 @@
 require_once dirname(__FILE__).'/../vendor/autoload.php';
 
 use tasker\Tasker;
-Tasker::run([
+Tasker::cfg([
     //传入配置
-    'worker_nums'=>1,
     'hot_update_path'=>[
         dirname(__FILE__)
     ],
@@ -25,3 +24,4 @@ Tasker::run([
         'charset'=>'utf8'
     ],
 ]);
+Tasker::push(\tests\Gc::class,'gc_test');
