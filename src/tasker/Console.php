@@ -7,8 +7,9 @@ class Console{
     /**
      * 输出头部信息
      **/
-    public static function hearder(){
-        $text= "------------------------- task ------------------------------".PHP_EOL;
+    public static function header(){
+        $text=self::logo().PHP_EOL;
+        $text.= "----------------------tasker----------------------".PHP_EOL;
         $text.= 'tasker version:' . Tasker::VERSION . "      PHP version:".PHP_VERSION.PHP_EOL;
         self::display($text,false);
     }
@@ -25,5 +26,17 @@ class Console{
     public static function log($msg,$isClose=false){
         $text=date('[Y-m-d H:i:s]').$msg;
         self::display($text,$isClose);
+    }
+    private static function logo(){
+        return <<<logo
+
+████████╗ █████╗ ███████╗██╗  ██╗███████╗██████╗ 
+╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗
+   ██║   ███████║███████╗█████╔╝ █████╗  ██████╔╝
+   ██║   ██╔══██║╚════██║██╔═██╗ ██╔══╝  ██╔══██╗
+   ██║   ██║  ██║███████║██║  ██╗███████╗██║  ██║
+   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝                                              
+logo;
+
     }
 }

@@ -18,8 +18,11 @@ class Master extends Process
     use Singleton;
     protected $cfg;
     protected $_workers=[];
+    private $_status=[];
     public function __construct($cfg)
     {
+        $this->_status['start_memory']=memory_get_usage();
+        $this->_status['start_time']=Op::microtime();
         $this->cfg=$cfg;
         $this->setProcessTitle($this->cfg['master_title']);
         $this->_process_id = posix_getpid();
@@ -83,6 +86,7 @@ class Master extends Process
         if (is_file($this->cfg['pid_path'])) {
             @unlink($this->cfg['pid_path']);
         }
+        Console::log("master process is stop");
         exit(0);
     }
 
@@ -101,6 +105,17 @@ class Master extends Process
      */
     protected function status()
     {
+        $process_id=$this->_process_id;
+        $start_time=date('Y-m-d H:i:s',$this->_status['start_time']);
+        $memory=Op::memory2M( memory_get_usage()-$this->_status['start_memory']);
+        //运行了多少时间
+        $runtime=Op::dtime(Op::microtime()-$this->_status['start_time']);
+        file_put_contents('/tmp/status.'.$this->_process_id,serialize(compact(
+                'process_id',
+                      'memory',
+                         'runtime',
+                         'start_time'
+            )).PHP_EOL,FILE_APPEND|LOCK_EX);
         $allWorkerPid = $this->_workers;
         foreach ($allWorkerPid as $workerPid) {
             posix_kill($workerPid, SIGUSR1);
@@ -229,6 +244,8 @@ class Master extends Process
             $STDERR = fopen($stdout_path, "a");
             restore_error_handler();
         }
+        //这咯写入才会记录到日志
+        Console::log("master ".$this->_process_id." start success");
 
     }
     /**
@@ -239,8 +256,8 @@ class Master extends Process
 
         while (1) {
             // 挂起当前进程的执行直到一个子进程退出或接收到一个信号
-            $status=0;
             if (($pid = pcntl_wait($status, WNOHANG)) > 0) {
+                Console::log("catch worker $pid stop and restart it right now");
                 unset($this->_workers[$pid]);//把中断的子进程的进程id 剔除掉
             }
             $this->forkWorkers();

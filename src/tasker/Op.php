@@ -23,6 +23,14 @@ class Op
         $h=floor(($time-$d*86400)/3600);//小时
         $m=floor(($time-$d*86400-$h*3600)/60);//分
         $s=$time%60;
-        return sprintf("%dDay %dHour %dMin %dSec",$d,$h,$m,$s);
+        return sprintf("%dD %d:%d:%d",$d,$h,$m,$s);
+    }
+    public static function microtime()
+    {
+        list($usec, $sec) = explode(" ", microtime());
+        return ((float)$usec + (float)$sec);
+    }
+    public static function memory2M($memory){
+        return round($memory/1024/1024, 2).'M';
     }
 }

@@ -1,6 +1,8 @@
 <?php
 namespace tests;
 require_once dirname(__FILE__).'/../vendor/autoload.php';
+
+use tasker\Op;
 use tasker\Tasker;
 Tasker::run([
     //传入配置
@@ -29,6 +31,7 @@ class Demo{
     public function test(...$data){
 //        Tasker::push(__CLASS__,'test',$data);
         //asdasd
+        Op::sleep(mt_rand(0,10)/10);
 
     }
 }

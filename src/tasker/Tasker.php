@@ -24,7 +24,7 @@ class Tasker
         if (-1 === $pid) {
             Console::display('process fork fail');
         } elseif ($pid > 0) {
-            Console::hearder();
+            Console::header();
             exit(0);
         }
         //  子进程了
@@ -58,24 +58,42 @@ start\t\tStart worker.\n
 restart\t\tStart master.\n
 stop\t\tStop worker.\n
 reload\t\tReload worker.\n
-status\t\tWorker status.\n\n\n
+status\t\tWorker status.\n
+\t\t-s speed info
+\t\t-t time info
+\t\t-c count info
+\t\t-m count info
+\n\n
 Use \"--help\" for more information about a command.\n";
-        if($argc<2)
+        $i=1;
+        $options=[];
+        while($command = $argv[$argc-$i])
+        {
+            if(substr($command,0,1)!=='-')
+            {
+                break;
+            }
+            $options[]=$command;
+            $i++;
+        }
+
+
+        if($argc<2 || in_array('--help',$argv) || empty($command))
         {
             Console::display($usage);
         }
-        $command = $argv[$argc-1];
+
 
         // 获取master的pid和存活状态
         $masterPid = is_file($cfg['pid_path']) ? file_get_contents($cfg['pid_path']) : 0;
         $masterAlive = $masterPid ? posix_kill($masterPid,0) : false;
         if ($masterAlive) {
             if ($command === 'start') {
-                Console::display('Task already running at '.$masterPid);
+                Console::display('Tasker already running at '.$masterPid);
             }
         } else {
             if ($command && $command !== 'start') {
-                Console::display('Task not run');
+                Console::display('Tasker not run');
             }
         }
         switch ($command) {
@@ -83,7 +101,7 @@ Use \"--help\" for more information about a command.\n";
                 break;
             case 'stop':
             case 'restart':
-                Console::display('Task stopping ...',false);
+                Console::display('Tasker stopping ...',false);
                 // 给master发送stop信号
                 posix_kill($masterPid, SIGINT);
 
@@ -95,10 +113,10 @@ Use \"--help\" for more information about a command.\n";
                         Console::display('Task stop fail');
                     }
                 }
-                Console::display('Task stop success',$command==='stop');
+                Console::display('Tasker stop success',$command==='stop');
                 break;
             case 'reload':
-                Console::display('Task reloading ...',false);
+                Console::display('Tasker reloading ...',false);
                 // 给master发送reload信号
                 posix_kill($masterPid, SIGUSR1);
                 $path=dirname($cfg['pid_path']).'/reload.'.$masterPid;
@@ -107,7 +125,7 @@ Use \"--help\" for more information about a command.\n";
                     usleep(100);
                 }
                 @unlink($path);
-                Console::display("Task reload success",false);
+                Console::display("Tasker reload success",false);
                 exit(0);
 
             case 'status':
@@ -115,30 +133,82 @@ Use \"--help\" for more information about a command.\n";
                 $path='/tmp/status.'.$masterPid;
                 while (!is_file($path))
                 {
-                    usleep(100);
+                    Op::sleep(0.001);
                 }
-                usleep(100000*$cfg['worker_nums']);
+                Op::sleep(0.1*$cfg['worker_nums']);
                 $status_content=file_get_contents($path);
                 @unlink($path);
-                $status_array=explode(PHP_EOL,$status_content);
-                $text="worker\tpid\truntime\tmemory\t".PHP_EOL;
-//                $total_memory=0;
-                foreach ($status_array as $index=>$status) {
-                    if($status)
-                    {
-                        $json=json_decode($status,true);
-                        $text.=($index+1)."\t".$json['process_id']."\t".$json['runtime']."\t".$json['memory'].PHP_EOL;
-//                        $total_memory+=$json['memory'];
-                    }
-                }
-                Console::hearder();
-                Console::display($text,false);
+                self::displayStatus($status_content,$masterPid);
+
                 exit(0);
 
             default:
                 Console::display($usage);
         }
 
+    }
+    protected static function displayStatus($status_content,$masterPid){
+
+        $status_array=explode(PHP_EOL,$status_content);
+        $master_status=[];
+        $worker_status=[];
+        foreach ($status_array as $index=>$status) {
+            if($status)
+            {
+                $decode=unserialize($status);
+                if($decode['process_id']==$masterPid)
+                {
+                    $master_status=$decode;
+                }
+                else{
+                    $worker_status[]=$decode;
+                }
+            }
+        }
+        Console::header();
+        $master_text="--------------------master info-------------------".PHP_EOL;
+        $master_text.="start_time:\t".$master_status['start_time'].PHP_EOL;
+        $master_text.="memory:\t\t".$master_status['memory'].PHP_EOL;
+        Console::display($master_text,false);
+        $worker_text="";
+        if(empty($options) || in_array('-s',$options))
+        {
+            $worker_text.="---------------------speed info-------------------".PHP_EOL;
+            $worker_text.="pid\tfast_speed\tslow_speed\tagv_speed".PHP_EOL;
+            foreach ($worker_status as $v)
+            {
+                $worker_text.=$v['process_id']."\t".$v['fast_speed']."\t\t".$v['slow_speed']."\t\t".$v['agv_speed']."".PHP_EOL;
+            }
+        }
+        if(empty($options) || in_array('-t',$options))
+        {
+            $worker_text.="---------------------time info--------------------".PHP_EOL;
+            $worker_text.="pid\truntime\t\tsleep_time\twork_time".PHP_EOL;
+            foreach ($worker_status as $v)
+            {
+                $worker_text.=$v['process_id']."\t".$v['runtime']."\t".$v['sleep_time']."\t".$v['work_time']."".PHP_EOL;
+            }
+        }
+        if(empty($options) || in_array('-c',$options))
+        {
+            $worker_text.="---------------------count info-------------------".PHP_EOL;
+            $worker_text.="pid\tsuccess_count\tfail_count\texcept_count".PHP_EOL;
+            foreach ($worker_status as $v)
+            {
+                $worker_text.=$v['process_id']."\t".$v['success_count']."\t\t".$v['fail_count']."\t\t".$v['except_count']."".PHP_EOL;
+            }
+        }
+        if(empty($options) || in_array('-m',$options))
+        {
+            $worker_text.="--------------------memory info-------------------".PHP_EOL;
+            $worker_text.="pid\tmemory".PHP_EOL;
+            foreach ($worker_status as $v)
+            {
+                $worker_text.=$v['process_id']."\t".$v['memory']."".PHP_EOL;
+            }
+        }
+
+        Console::display($worker_text,false);
     }
 
     /**
